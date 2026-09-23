@@ -1,0 +1,130 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  /* ── Papel ─────────────────────────────────────────────── */
+  --color-paper: #f1e9d8;
+  --color-parchment: #faf5ea;
+  --color-bone: #fffdf7;
+  --color-paper-deep: #e5d7bd;
+  --color-shelf: #2e2218;
+
+  /* ── Tinta ─────────────────────────────────────────────── */
+  --color-ink: #2a2119;
+  --color-ink-soft: #4a3c2b;
+  --color-sepia: #6e5c47;
+  --color-faded: #90795e;
+
+  /* ── Filetes / linhas ──────────────────────────────────── */
+  --color-line: #d7c5a6;
+  --color-line-strong: #c3ac87;
+
+  /* ── Encadernação ──────────────────────────────────────── */
+  --color-leather: #a3421f;
+  --color-leather-deep: #7e2f16;
+  --color-brandy: #c05c2c;
+  --color-binding: #4d5c3b;
+  --color-binding-deep: #38442b;
+  --color-gold: #a97c24;
+  --color-gold-soft: #d7b05c;
+
+  /* ── Avisos ────────────────────────────────────────────── */
+  --color-danger: #9c2d1f;
+  --color-danger-soft: #f3ded6;
+  --color-success: #47703a;
+  --color-success-soft: #e4ead9;
+
+  /* ── Fontes ────────────────────────────────────────────── */
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Sombras de sala de leitura ────────────────────────── */
+  --shadow-paper: 0 1px 2px rgb(42 33 25 / 0.06), 0 8px 24px -12px rgb(42 33 25 / 0.18);
+  --shadow-lift: 0 2px 6px rgb(42 33 25 / 0.08), 0 24px 48px -20px rgb(42 33 25 / 0.32);
+  --shadow-shelf: 0 14px 24px -10px rgb(34 20 12 / 0.5);
+  --shadow-inset-paper: inset 0 1px 0 rgb(255 255 255 / 0.55), inset 0 0 0 1px rgb(122 94 55 / 0.06);
+}
+
+/* ── Base ────────────────────────────────────────────────── */
+
+html {
+  color-scheme: light;
+}
+
+body {
+  @apply font-sans text-ink bg-paper antialiased;
+}
+
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-ink);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 999px;
+  border: 3px solid var(--color-paper);
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ── Textura de papel dobrado ────────────────────────────── */
+
+.paper-texture {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+
+/* ── Rótulos de biblioteca (small-caps) ──────────────────── */
+
+.letterhead {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+/* ── Filete duplo de página de rosto ─────────────────────── */
+
+.double-rule {
+  border-top: 1px solid var(--color-line-strong);
+  border-bottom: 1px solid var(--color-line);
+  height: 1px;
+  background: transparent;
+}
+
+/* ── Carimbo ─────────────────────────────────────────────── */
+
+.rubber-stamp {
+  border: 2px solid currentColor;
+  border-radius: 0.35rem;
+  padding: 0.22rem 0.5rem;
+  font-family: var(--font-sans);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-size: 0.6rem;
+  transform: rotate(-3deg);
+  box-shadow: inset 0 0 0 1px currentColor;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+}
+
+/* ── Detalhes de renderização ────────────────────────────── */
+
+input[type="date"] {
+  color-scheme: light;
+}
+
+.font-display {
+  font-feature-settings: "ss01", "liga";
+}
