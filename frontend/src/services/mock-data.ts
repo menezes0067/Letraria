@@ -1,0 +1,132 @@
+import { addDays, todayISO } from "../lib/dates";
+import type { Book, Loan, User } from "../types";
+import type { ActivityEntry } from "./api";
+
+const t = todayISO();
+
+export const mockBooks: Book[] = [
+  { id: "b-dom-casmurro", title: "Dom Casmurro", author: "Machado de Assis", year: 1899, availableQuantity: 3, format: "fisico", createdAt: t },
+  { id: "b-bras-cubas", title: "Memórias Póstumas de Brás Cubas", author: "Machado de Assis", year: 1881, availableQuantity: 2, format: "fisico", createdAt: t },
+  { id: "b-quincas", title: "Quincas Borba", author: "Machado de Assis", year: 1891, availableQuantity: 1, format: "fisico", createdAt: t },
+  { id: "b-cortico", title: "O Cortiço", author: "Aluísio Azevedo", year: 1890, availableQuantity: 2, format: "fisico", createdAt: t },
+  { id: "b-gabriela", title: "Gabriela, Cravo e Canela", author: "Jorge Amado", year: 1958, availableQuantity: 1, format: "ebook", createdAt: t },
+  { id: "b-capitaes", title: "Capitães da Areia", author: "Jorge Amado", year: 1937, availableQuantity: 0, format: "fisico", createdAt: t },
+  { id: "b-gsveredas", title: "Grande Sertão: Veredas", author: "João Guimarães Rosa", year: 1956, availableQuantity: 2, format: "fisico", createdAt: t },
+  { id: "b-vidas-secas", title: "Vidas Secas", author: "Graciliano Ramos", year: 1938, availableQuantity: 4, format: "fisico", createdAt: t },
+  { id: "b-hora-estrela", title: "A Hora da Estrela", author: "Clarice Lispector", year: 1977, availableQuantity: 1, format: "ebook", createdAt: t },
+  { id: "b-paixoes", title: "A Paixão Segundo G.H.", author: "Clarice Lispector", year: 1964, availableQuantity: 1, format: "fisico", createdAt: t },
+  { id: "b-cegueira", title: "Ensaio Sobre a Cegueira", author: "José Saramago", year: 1995, availableQuantity: 2, format: "fisico", createdAt: t },
+  { id: "b-evangelho", title: "O Evangelho Segundo Jesus Cristo", author: "José Saramago", year: 1991, availableQuantity: 1, format: "audiobook", createdAt: t },
+  { id: "b-alquimista", title: "O Alquimista", author: "Paulo Coelho", year: 1988, availableQuantity: 3, format: "audiobook", createdAt: t },
+  { id: "b-a-coruja", title: "A Coruja de Minerva", author: "Laís Rodrigues", year: 2019, availableQuantity: 2, format: "ebook", createdAt: t },
+  { id: "b-canudos", title: "Os Sertões", author: "Euclides da Cunha", year: 1902, availableQuantity: 1, format: "fisico", createdAt: t },
+  { id: "b-macunaima", title: "Macunaíma", author: "Mário de Andrade", year: 1928, availableQuantity: 2, format: "fisico", createdAt: t },
+  { id: "b-memorias-mo", title: "Memórias de um Sargento de Milícias", author: "Manuel Antônio de Almeida", year: 1854, availableQuantity: 1, format: "ebook", createdAt: t },
+  { id: "b-pedro", title: "O Crime do Padre Amaro", author: "Eça de Queirós", year: 1875, availableQuantity: 1, format: "fisico", createdAt: t },
+];
+
+export const mockUsers: User[] = [
+  { id: "u-ana", name: "Ana Beatriz Souza", email: "ana@letraria.dev", password: "senha123", profile: "bibliotecario", createdAt: t },
+  { id: "u-miguel", name: "Miguel Almeida", email: "miguel@example.com", password: "senha123", profile: "aluno", createdAt: t },
+  { id: "u-clara", name: "Clara Martins", email: "clara@example.com", password: "senha123", profile: "aluno", createdAt: t },
+  { id: "u-rafa", name: "Rafael Nogueira", email: "rafael@example.com", password: "senha123", profile: "aluno", createdAt: t },
+  { id: "u-beatriz", name: "Beatriz Lopes", email: "bia@example.com", password: "senha123", profile: "aluno", createdAt: t },
+];
+
+export const mockLoans: Loan[] = [
+  {
+    id: "e-1001",
+    bookId: "b-dom-casmurro",
+    userId: "u-miguel",
+    loanDate: addDays(t, -20),
+    expectedReturnDate: addDays(t, -6),
+    actualReturnDate: addDays(t, -4),
+    fine: 3,
+    createdAt: addDays(t, -20),
+    updatedAt: addDays(t, -4),
+  },
+  {
+    id: "e-1002",
+    bookId: "b-cortico",
+    userId: "u-clara",
+    loanDate: addDays(t, -12),
+    expectedReturnDate: addDays(t, 2),
+    actualReturnDate: null,
+    fine: 0,
+    createdAt: addDays(t, -12),
+    updatedAt: addDays(t, -12),
+  },
+  {
+    id: "e-1003",
+    bookId: "b-gsveredas",
+    userId: "u-rafa",
+    loanDate: addDays(t, -34),
+    expectedReturnDate: addDays(t, -20),
+    actualReturnDate: null,
+    fine: 0,
+    createdAt: addDays(t, -34),
+    updatedAt: addDays(t, -34),
+  },
+  {
+    id: "e-1004",
+    bookId: "b-alquimista",
+    userId: "u-beatriz",
+    loanDate: addDays(t, -5),
+    expectedReturnDate: addDays(t, 2),
+    actualReturnDate: null,
+    fine: 0,
+    createdAt: addDays(t, -5),
+    updatedAt: addDays(t, -5),
+  },
+  {
+    id: "e-1005",
+    bookId: "b-vidas-secas",
+    userId: "u-miguel",
+    loanDate: addDays(t, -30),
+    expectedReturnDate: addDays(t, -16),
+    actualReturnDate: addDays(t, -14),
+    fine: 0,
+    createdAt: addDays(t, -30),
+    updatedAt: addDays(t, -14),
+  },
+  {
+    id: "e-1006",
+    bookId: "b-hora-estrela",
+    userId: "u-clara",
+    loanDate: addDays(t, -1),
+    expectedReturnDate: addDays(t, 6),
+    actualReturnDate: null,
+    fine: 0,
+    createdAt: addDays(t, -1),
+    updatedAt: addDays(t, -1),
+  },
+  {
+    id: "e-1007",
+    bookId: "b-capitaes",
+    userId: "u-beatriz",
+    loanDate: addDays(t, -8),
+    expectedReturnDate: addDays(t, 6),
+    actualReturnDate: null,
+    fine: 0,
+    createdAt: addDays(t, -8),
+    updatedAt: addDays(t, -8),
+  },
+  {
+    id: "e-1008",
+    bookId: "b-macunaima",
+    userId: "u-clara",
+    loanDate: addDays(t, -45),
+    expectedReturnDate: addDays(t, -31),
+    actualReturnDate: addDays(t, -30),
+    fine: 1.5,
+    createdAt: addDays(t, -45),
+    updatedAt: addDays(t, -30),
+  },
+];
+
+export const mockActivity: ActivityEntry[] = [
+  { id: "a-1", action: "empréstimo", detail: "Ficha e-1001 · Dom Casmurro", at: addDays(t, -20) },
+  { id: "a-2", action: "devolução", detail: "Ficha e-1001 · Dom Casmurro · multa R$ 3,00", at: addDays(t, -4) },
+  { id: "a-3", action: "empréstimo", detail: "Ficha e-1006 · A Hora da Estrela", at: addDays(t, -1) },
+  { id: "a-4", action: "cadastro", detail: "Leitor Clara Martins", at: addDays(t, -2) },
+];
