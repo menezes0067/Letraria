@@ -1,37 +1,29 @@
 import { Book } from "./book.ts";
 
-class Audiobook extends Book {
-	protected _durationInMinutes?: number;
-
+class Ebook extends Book {
 	constructor(
 		id: string,
 		title: string,
 		author: string,
 		year: number,
-		availableQuantity: number,
+		availableQuantity: number = 1,
 		format?: string,
 		createdAt?: string,
-		durationInMinutes?: number,
 	) {
 		super(id, title, author, year, availableQuantity, format, createdAt);
-		this._durationInMinutes = durationInMinutes;
-	}
-
-	get durationInMinutes(): number | undefined {
-		return this._durationInMinutes;
 	}
 
 	calculateDueDateInDays(): number {
-		return 7;
+		return 21;
 	}
 
 	calculateFine(_overduedays: number): number {
-		return 0; 
+		return 0;
 	}
 
 	getType(): string {
-		return "audiobook"    
+		return "ebook"    
 	}
 }
 
-export { Audiobook }
+export { Ebook }
