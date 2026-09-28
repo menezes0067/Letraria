@@ -1,11 +1,17 @@
-interface Loan {
-	id: string,
-	bookid: string,
-	userid: string,
-	loandate: string,
-	expectedreturndate: string,
-	actualreturndate: string,
-	fine: number
-}
+export class Loan {
+	constructor(
+		readonly id: string,
+		readonly bookId: string,
+		readonly userId: string,
+		readonly loanDate: string,
+		readonly expectedReturnDate: string,
+		readonly actualReturnDate: string | null,
+		readonly fine: number,
+		readonly createdAt: string,
+		readonly updatedAt: string,
+	) {}
 
-export { Loan }
+	isOpen(): boolean {
+		return this.actualReturnDate === null;
+	}
+}

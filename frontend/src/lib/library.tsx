@@ -45,10 +45,32 @@ interface LibraryContextValue {
   overdueLoans: Loan[];
 }
 
+const SESSION_KEY = "letraria.session";
+
+function loadSession(): User | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<User>;
+    if (typeof parsed.id !== "string" || !parsed.id) return null;
+    return parsed as User;
+  } catch {
+    return null;
+  }
+}
+
+function saveSession(user: User) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(user));
+}
+
+function clearSession() {
+  sessionStorage.removeItem(SESSION_KEY);
+}
+
 const LibraryContext = createContext<LibraryContextValue | null>(null);
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(loadSession);
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState<Book[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -69,6 +91,11 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       setUsers(u);
       setLoans(l);
       setActivity(a);
+      const stored = loadSession();
+      if (stored && !u.some((usr) => usr.id === stored.id)) {
+        clearSession();
+        setCurrentUser(null);
+      }
       setLoading(false);
     })();
     return () => {
@@ -82,10 +109,14 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     const user = await api.signIn(email, password);
+    saveSession(user);
     setCurrentUser(user);
   }, []);
 
-  const signOut = useCallback(() => setCurrentUser(null), []);
+  const signOut = useCallback(() => {
+    clearSession();
+    setCurrentUser(null);
+  }, []);
 
   const addBook = useCallback(
     async (input: BookInput) => {

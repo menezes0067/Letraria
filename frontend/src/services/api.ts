@@ -1,22 +1,12 @@
-import { addDays, isOverdue } from "../lib/dates";
-import { mockActivity, mockBooks, mockLoans, mockUsers } from "./mock-data";
 import type { Book, BookFormat, Loan, User, UserProfile } from "../types";
-import { computeFine, FORMAT_SETTINGS, isBookAvailable, PROFILE_LABEL } from "../types";
 
 /**
- * Camada de acesso a dados.
- * Simula a API em memória (mesmas assinaturas que o backend terá),
- * para o visual funcionar de forma autônoma — depois basta trocar
- * o corpo destas funções por chamadas `fetch`.
+ * Camada de acesso a dados — fala com o backend via HTTP.
+ * As assinaturas são estáveis, então os componentes só invocam `api.*`.
+ * Em desenvolvimento o Vite faz proxy de `/api` para o servidor (vite.config.ts).
  */
 
-const delay = (ms = 220) => new Promise((r) => setTimeout(r, ms));
-
-let books: Book[] = [...mockBooks];
-let users: User[] = [...mockUsers];
-let loans: Loan[] = [...mockLoans];
-
-/* ── Auditoria (RF15) ─────────────────────────────────────── */
+const API_BASE = import.meta.env.VITE_API_URL ?? "/api";
 
 export interface ActivityEntry {
   id: string;
@@ -25,40 +15,42 @@ export interface ActivityEntry {
   at: string;
 }
 
-let activity: ActivityEntry[] = [...mockActivity];
-
-function record(action: ActivityEntry["action"], detail: string) {
-  activity = [
-    {
-      id: `a-${Date.now().toString(36)}`,
-      action,
-      detail,
-      at: new Date().toISOString(),
+async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(init?.headers ?? {}),
     },
-    ...activity,
-  ].slice(0, 60);
+  });
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? "Erro ao comunicar com o servidor.");
+  }
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
 }
 
-export async function fetchActivity(): Promise<ActivityEntry[]> {
-  await delay(120);
-  return [...activity];
+function json(method: string, body?: unknown): RequestInit {
+  return { method, body: body === undefined ? undefined : JSON.stringify(body) };
 }
 
 /* ── Leituras ─────────────────────────────────────────────── */
 
 export async function fetchBooks(): Promise<Book[]> {
-  await delay();
-  return [...books];
+  return request<Book[]>("/books");
 }
 
 export async function fetchUsers(): Promise<User[]> {
-  await delay();
-  return [...users];
+  return request<User[]>("/users");
 }
 
 export async function fetchLoans(): Promise<Loan[]> {
-  await delay();
-  return [...loans];
+  return request<Loan[]>("/loans");
+}
+
+export async function fetchActivity(): Promise<ActivityEntry[]> {
+  return request<ActivityEntry[]>("/activity");
 }
 
 /* ── Livros ───────────────────────────────────────────────── */
@@ -72,31 +64,15 @@ export interface BookInput {
 }
 
 export async function createBook(input: BookInput): Promise<Book> {
-  await delay();
-  const now = new Date().toISOString();
-  const book: Book = { id: `b-${Date.now().toString(36)}`, ...input, createdAt: now };
-  books = [book, ...books];
-  record("cadastro", `Livro “${book.title}” (${book.format})`);
-  return book;
+  return request<Book>("/books", json("POST", input));
 }
 
 export async function updateBook(id: string, input: BookInput): Promise<Book> {
-  await delay();
-  const existing = books.find((b) => b.id === id);
-  if (!existing) throw new Error("Livro não encontrado.");
-  const updated: Book = { ...existing, ...input };
-  books = books.map((b) => (b.id === id ? updated : b));
-  record("edição", `Livro “${updated.title}” atualizado`);
-  return updated;
+  return request<Book>(`/books/${id}`, json("PUT", input));
 }
 
 export async function removeBook(id: string): Promise<void> {
-  await delay();
-  const existing = books.find((b) => b.id === id);
-  const inUse = loans.some((l) => l.bookId === id && l.actualReturnDate === null);
-  if (inUse) throw new Error("Livro com empréstimo em aberto não pode ser excluído.");
-  books = books.filter((b) => b.id !== id);
-  if (existing) record("exclusão", `Livro “${existing.title}” removido da estante`);
+  return request<void>(`/books/${id}`, json("DELETE"));
 }
 
 /* ── Usuários ─────────────────────────────────────────────── */
@@ -109,25 +85,11 @@ export interface NewUserInput {
 }
 
 export async function createUser(input: NewUserInput): Promise<User> {
-  await delay();
-  if (users.some((u) => u.email === input.email))
-    throw new Error("Já existe uma carteirinha com este e-mail.");
-  const now = new Date().toISOString();
-  const user: User = {
-    id: `u-${Date.now().toString(36)}`,
-    ...input,
-    createdAt: now,
-  };
-  users = [...users, user];
-  record("cadastro", `${PROFILE_LABEL[user.profile]} ${user.name}`);
-  return user;
+  return request<User>("/users", json("POST", input));
 }
 
 export async function signIn(email: string, password: string): Promise<User> {
-  await delay(400);
-  const found = users.find((u) => u.email === email && u.password === password);
-  if (!found) throw new Error("E-mail ou senha não conferem.");
-  return found;
+  return request<User>("/auth/login", json("POST", { email, password }));
 }
 
 /* ── Empréstimos ──────────────────────────────────────────── */
@@ -139,105 +101,15 @@ export interface NewLoanInput {
   expectedReturnDate: string;
 }
 
-function userHasOverdueLoan(userId: string): boolean {
-  return loans.some(
-    (l) => l.userId === userId && l.actualReturnDate === null && isOverdue(l.expectedReturnDate),
-  );
-}
-
 export async function createLoan(input: NewLoanInput): Promise<Loan> {
-  await delay();
-  const book = books.find((b) => b.id === input.bookId);
-  if (!book) throw new Error("Livro não encontrado.");
-  if (!isBookAvailable(book))
-    throw new Error("Este livro físico está sem exemplares disponíveis."); // RF12
-  if (userHasOverdueLoan(input.userId))
-    throw new Error("Usuário com empréstimo em atraso não pode retirar novos livros."); // RF14
-
-  const now = new Date().toISOString();
-  const loan: Loan = {
-    id: `e-${Math.floor(1000 + Math.random() * 9000)}`,
-    bookId: input.bookId,
-    userId: input.userId,
-    loanDate: input.loanDate,
-    expectedReturnDate: input.expectedReturnDate,
-    actualReturnDate: null,
-    fine: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
-  loans = [loan, ...loans];
-  if (book.format === "fisico") {
-    books = books.map((b) =>
-      b.id === input.bookId ? { ...b, availableQuantity: b.availableQuantity - 1 } : b,
-    );
-  }
-  record("empréstimo", `Ficha ${loan.id} · ${book.title}`);
-  return loan;
+  return request<Loan>("/loans", json("POST", input));
 }
 
-/** Retirada pelos próprios alunos — regras RF09/RF12/RF14 centralizadas. */
+/** Retirada pelos próprios alunos — regras RF09/RF12/RF14 centralizadas no servidor. */
 export async function borrowSelf(userId: string, bookId: string): Promise<Loan> {
-  await delay();
-  const book = books.find((b) => b.id === bookId);
-  if (!book) throw new Error("Livro não encontrado.");
-  if (!isBookAvailable(book))
-    throw new Error("Este livro está sem exemplares disponíveis no momento."); // RF12
-  if (userHasOverdueLoan(userId))
-    throw new Error("Você possui empréstimo em atraso e não pode retirar novos livros."); // RF14
-  const alreadyActive = loans.some(
-    (l) => l.bookId === bookId && l.userId === userId && l.actualReturnDate === null,
-  );
-  if (alreadyActive) throw new Error("Você já está com este título retirado.");
-
-  const loanDate = new Date().toISOString().slice(0, 10);
-  const expectedReturnDate = addDays(loanDate, FORMAT_SETTINGS[book.format].dueDays); // RF09
-  const now = new Date().toISOString();
-  const loan: Loan = {
-    id: `e-${Math.floor(1000 + Math.random() * 9000)}`,
-    bookId,
-    userId,
-    loanDate,
-    expectedReturnDate,
-    actualReturnDate: null,
-    fine: 0,
-    createdAt: now,
-    updatedAt: now,
-  };
-  loans = [loan, ...loans];
-  if (book.format === "fisico") {
-    books = books.map((b) =>
-      b.id === bookId ? { ...b, availableQuantity: b.availableQuantity - 1 } : b,
-    );
-  }
-  record("empréstimo", `Retirada ${loan.id} · ${book.title}`);
-  return loan;
+  return request<Loan>("/loans/borrow", json("POST", { userId, bookId }));
 }
 
 export async function returnLoan(loanId: string, actualDate: string): Promise<Loan> {
-  await delay();
-  let updated: Loan | undefined;
-  loans = loans.map((l) => {
-    if (l.id !== loanId) return l;
-    const book = books.find((b) => b.id === l.bookId);
-    const fine = book ? computeFine(book.format, l.expectedReturnDate, actualDate) : 0;
-    updated = { ...l, actualReturnDate: actualDate, fine, updatedAt: new Date().toISOString() };
-    return updated;
-  });
-  if (!updated) throw new Error("Empréstimo não encontrado.");
-  const returnedBookId = updated.bookId;
-  const returnedId = updated.id;
-  const returnedFine = updated.fine;
-  const book = books.find((b) => b.id === returnedBookId);
-  if (book?.format === "fisico") {
-    books = books.map((b) =>
-      b.id === returnedBookId ? { ...b, availableQuantity: b.availableQuantity + 1 } : b,
-    );
-  }
-  record("devolução", `Ficha ${returnedId} · ${book?.title ?? ""}${fineLabel(returnedFine)}`);
-  return updated;
-}
-
-function fineLabel(fine: number): string {
-  return fine > 0 ? ` · multa R$ ${fine.toFixed(2).replace(".", ",")}` : "";
+  return request<Loan>(`/loans/${loanId}/return`, json("POST", { actualDate }));
 }
