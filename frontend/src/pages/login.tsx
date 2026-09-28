@@ -1,4 +1,4 @@
-import { KeyRound, Landmark, Mail, ShieldCheck, UserRound } from "lucide-react";
+import { KeyRound, Landmark, Mail, ShieldCheck } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -16,7 +16,6 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [showHint, setShowHint] = useState(false);
 
   const registered = location.state?.registered === true;
 
@@ -117,31 +116,6 @@ export function Login() {
           Criar conta
         </Link>
       </p>
-
-      <button
-        type="button"
-        onClick={() => setShowHint((v) => !v)}
-        className="mt-4 flex w-full cursor-pointer items-center justify-center gap-1.5 text-xs font-medium text-faded transition-colors hover:text-binding"
-      >
-        <ShieldCheck className="size-3.5" />
-        Credenciais de demonstração
-      </button>
-      {showHint && (
-        <div className="mt-3 rounded-lg border border-line bg-paper-deep/50 p-4 text-sm text-ink-soft">
-          <p className="flex items-center gap-2 font-semibold">
-            <UserRound className="size-4 text-leather" /> Bibliotecário
-          </p>
-          <p className="mt-1 font-mono text-xs text-sepia">
-            ana@letraria.dev · senha123
-          </p>
-          <p className="mt-3 flex items-center gap-2 font-semibold">
-            <UserRound className="size-4 text-binding" /> Aluno
-          </p>
-          <p className="mt-1 font-mono text-xs text-sepia">
-            miguel@example.com · senha123
-          </p>
-        </div>
-      )}
     </AuthShell>
   );
 }

@@ -1,17 +1,7 @@
-import express from "express";
+import { createApp } from "./composition/create-app.ts";
 
-const app = express();
+const PORT = 3000;
 
-app.use(express.json());
-
-app.get("/", (_req, res) => {
-	res.json({
-		message: "API funcionando"
-	});
-});
-
-const PORT = 3000
-
-app.listen(PORT, () => {
+createApp().listen(PORT, () => {
 	console.log(`server is running http://localhost:${PORT}`);
 });
