@@ -1,0 +1,4 @@
+allowBuilds:
+  bcrypt: false
+minimumReleaseAgeExclude:
+  - '@oxlint-tsgolint/win32-arm64@7.0.2007'
