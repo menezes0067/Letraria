@@ -1,3 +1,4 @@
 allowBuilds:
-  better-sqlite3: false
-  esbuild: false
+  bcrypt: false
+minimumReleaseAgeExclude:
+  - '@oxlint-tsgolint/win32-arm64@7.0.2007'
